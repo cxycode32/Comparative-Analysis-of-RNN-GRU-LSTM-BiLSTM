@@ -39,7 +39,8 @@ python main.py
 ├── assets/  # Images of model comparison
 ├── main.py  # Main script for training and evaluation
 ├── README.md               # Project documentation
-└── requirements.txt        # Required dependencies
+├── requirements.txt        # Required dependencies
+└── checkpoint.pth.tar      # Saved model
 ```
 
 

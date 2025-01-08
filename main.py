@@ -6,10 +6,11 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import time
+import utils
 
 
 class BaseRNN(nn.Module):
-    def __init__(self, cell_type, input_size, sequence_length, hidden_size, num_layers, num_classes, learning_rate, batch_size, num_epochs, bidirectional=False):
+    def __init__(self, cell_type, input_size, sequence_length, hidden_size, num_layers, num_classes, learning_rate, batch_size, num_epochs, load_model, bidirectional=False):
         super(BaseRNN, self).__init__()
         self.cell_type = cell_type.lower()
         self.hidden_size = hidden_size
@@ -51,17 +52,23 @@ def load_data(batch_size):
     return train_loader, test_loader
 
 
-def train_and_evaluate(model, train_loader, test_loader, device, num_epochs, learning_rate):
+def train_and_evaluate(model, train_loader, test_loader, device, num_epochs, learning_rate, load_model):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    if load_model:
+        utils.load_checkpoint(model, optimizer)
 
     train_losses = []
     test_accuracies = []
     start_time = time.time()
 
     for epoch in range(num_epochs):
-        model.train()
         epoch_loss = 0
+
+        if epoch == 2:
+            checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+            utils.save_checkpoint(checkpoint)
 
         for data, targets in train_loader:
             data = data.to(device).squeeze(1)
@@ -128,7 +135,8 @@ def main():
         'num_classes': 10,
         'learning_rate': 0.001,
         'batch_size': 64,
-        'num_epochs': 2
+        'num_epochs': 3,
+        'load_model': False
     }
 
     train_loader, test_loader = load_data(hyperparams['batch_size'])
@@ -144,7 +152,7 @@ def main():
     for name, model in models.items():
         print(f"\nTraining {name}...")
         train_losses, test_accuracies = train_and_evaluate(
-            model, train_loader, test_loader, device, hyperparams['num_epochs'], hyperparams['learning_rate']
+            model, train_loader, test_loader, device, hyperparams['num_epochs'], hyperparams['learning_rate'], hyperparams['load_model']
         )
         train_losses_list.append(train_losses)
         test_accuracies_list.append(test_accuracies)
